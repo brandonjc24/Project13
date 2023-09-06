@@ -480,7 +480,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //TODO: Drag-To-Reorder GUI
     //TODO: GUI design for each DSP instance?
     //TODO: metering
-    //TODO: prepare all DSP
+    //[DONE]: prepare all DSP
     //TODO: wet/dry knob [BONUS]
     //TODO: mono & stereo versions [mono is BONUS]
     //TODO: modulators [BONUS]
@@ -488,18 +488,22 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //TODO: pre/post filtering [BONUS]
     //TODO: delay module [BONUS]
 
+    //temp instance to pull into
     auto newDSPOrder = DSP_Order();
 
-    while( dspOrderFifo.pull(newDSPOrder) )
+    //try to pull
+    while (dspOrderFifo.pull(newDSPOrder))
     {
 
     }
 
+    //if you pulled, replace dspOrder
     if (newDSPOrder != DSP_Order())
         dspOrder = newDSPOrder;
 
+    //now convert dspOrder into an array of pointers.
     DSP_Pointers dspPointers;
-    
+
     for (size_t i = 0; i < dspPointers.size(); ++i)
     {
         switch (dspOrder[i])
@@ -525,6 +529,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         }
     }
 
+    //now process
     auto block = juce::dsp::AudioBlock<float>(buffer);
     auto context = juce::dsp::ProcessContextReplacing<float>(block);
 
@@ -546,21 +551,24 @@ bool Project13AudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* Project13AudioProcessor::createEditor()
 {
-    return new Project13AudioProcessorEditor (*this);
+    //return new Project13AudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
 void Project13AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream mos(destData, false);
+    apvts.state.writeToStream(mos);
 }
 
 void Project13AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if (tree.isValid())
+    {
+        apvts.replaceState(tree);
+    }
 }
 
 //==============================================================================

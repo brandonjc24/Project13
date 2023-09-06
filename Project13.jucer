@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="PG6NGl" name="Project13" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20"
+              companyName="BColes">
   <MAINGROUP id="GHDuIL" name="Project13">
     <GROUP id="{AAB082BF-C20A-B8C4-E2CE-3FE7CEBE26AC}" name="Source">
       <GROUP id="{179FEB93-FE5A-F9DF-DCF6-147EC627D0C6}" name="DSP">
