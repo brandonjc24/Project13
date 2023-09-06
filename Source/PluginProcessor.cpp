@@ -129,6 +129,13 @@ bool Project13AudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 }
 #endif
 
+juce::AudioProcessorValueTreeState::ParameterLayout Project13AudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    return layout;
+}
+
 void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
