@@ -221,8 +221,25 @@ void Project13AudioProcessor::changeProgramName (int index, const juce::String& 
 //==============================================================================
 void Project13AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumInputChannels();
+
+    std::vector<juce::dsp::ProcessorBase*> dsp
+    {
+        &phaser,
+        &chorus,
+        &overdrive,
+        &ladderFilter,
+        &generalFilter
+    };
+
+    for (auto p : dsp)
+    {
+        p->prepare(spec);
+        p->reset();
+    }
 }
 
 void Project13AudioProcessor::releaseResources()
@@ -455,8 +472,8 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    //TODO: add APVTS
-    //TODO: create audio parameters for all dsp choices
+    //[DONE]: add APVTS
+    //[DONE]: create audio parameters for all dsp choices
     //TODO: update DSP here from audio parameters
     //TODO: save/load settings
     //TODO: save/load DSP order
