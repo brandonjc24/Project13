@@ -37,9 +37,9 @@ Project13AudioProcessor::Project13AudioProcessor()
 
 
     /*
-     phaser cached params
+     cached params
      */
-    auto phaserParams = std::array
+    auto floatParams = std::array
     {
         &phaserRateHz,
         &phaserCenterFreqHz,
@@ -47,7 +47,7 @@ Project13AudioProcessor::Project13AudioProcessor()
         &phaserFeedbackPercent,
         &phaserMixPercent,
     };
-    auto phaserFuncs = std::array
+    auto floatNameFuncs = std::array
     {
         &getPhaserRateName,
         &getPhaserCenterFreqName,
@@ -56,10 +56,11 @@ Project13AudioProcessor::Project13AudioProcessor()
         &getPhaserMixName,
     };
 
-    for (size_t i = 0; i < phaserParams.size(); ++i)
+    jassert(floatParams.size() == floatNameFuncs.size());
+    for (size_t i = 0; i < floatParams.size(); ++i)
     {
-        auto ptrToParamPtr = phaserParams[i];
-        *ptrToParamPtr = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(phaserFuncs[i]()));
+        auto ptrToParamPtr = floatParams[i];
+        *ptrToParamPtr = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(floatNameFuncs[i]()));
         jassert(*ptrToParamPtr != nullptr);
     }
 
