@@ -501,6 +501,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     if (newDSPOrder != DSP_Order())
         dspOrder = newDSPOrder;
 
+    dspOrder = newDSPOrder;
     //now convert dspOrder into an array of pointers.
     DSP_Pointers dspPointers;
 
