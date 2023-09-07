@@ -573,7 +573,9 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //try to pull
     while (dspOrderFifo.pull(newDSPOrder))
     {
-
+#if VERIFY_BYPASS_FUNCTIONALITY
+        jassertfalse;
+#endif
     }
 
     //if you pulled, replace dspOrder
@@ -637,6 +639,18 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         {
             juce::ScopedValueSetter<bool> svs(context.isBypassed,
                 dspPointers[i].bypassed);
+
+#if VERIFY_BYPASS_FUNCTIONALITY
+            if (context.isBypassed)
+            {
+                jassertfalse;
+            }
+
+            if (dspPointers[i].processor == &generalFilter)
+            {
+                continue;
+            }
+#endif
 
             dspPointers[i].processor->process(context);
         }
@@ -726,6 +740,20 @@ void Project13AudioProcessor::setStateInformation (const void* data, int sizeInB
             dspOrderFifo.push(order);
         }
         DBG(apvts.state.toXmlString());
+
+#if VERIFY_BYPASS_FUNCTIONALITY
+        juce::Timer::callAfterDelay(1000, [this]()
+            {
+                DSP_Order order;
+        order.fill(DSP_Option::LadderFilter);
+        order[0] = DSP_Option::Chorus;
+
+        //bypass the Chorus
+        chorusBypass->setValueNotifyingHost(1.f);
+        dspOrderFifo.push(order);
+            });
+#endif
+
     }
 }
 
