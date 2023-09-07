@@ -129,6 +129,17 @@ private:
         DSP dsp;
     };
 
+    template<typename ParamType, typename Params, typename Funcs>
+    void initCachedParams(Params paramsArr, Funcs funcsArray)
+    {
+        for (size_t i = 0; i < paramsArr.size(); ++i)
+        {
+            auto ptrToParamPtr = paramsArr[i];
+            *ptrToParamPtr = dynamic_cast<ParamType>(apvts.getParameter(funcsArray[i]()));
+            jassert(*ptrToParamPtr != nullptr);
+        }
+    }
+
     DSP_Choice<juce::dsp::DelayLine<float>> delay;
     DSP_Choice<juce::dsp::Phaser<float>> phaser;
     DSP_Choice<juce::dsp::Chorus<float>> chorus;
@@ -142,7 +153,7 @@ private:
     };
     using DSP_Pointers = std::array<ProcessState, static_cast<size_t>(DSP_Option::END_OF_LIST)>;
 
-    #define VERIFY_BYPASS_FUNCTIONALITY true
+    #define VERIFY_BYPASS_FUNCTIONALITY false
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Project13AudioProcessor)
 };
