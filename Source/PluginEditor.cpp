@@ -45,6 +45,23 @@ Project13AudioProcessorEditor::ExtendedTabBarButton::ExtendedTabBarButton(const 
 
 }
 
+//==============================================================================
+Project13AudioProcessorEditor::ExtendedTabbedButtonBar::ExtendedTabbedButtonBar() :
+    juce::TabbedButtonBar(juce::TabbedButtonBar::Orientation::TabsAtTop)
+{
+
+}
+
+bool Project13AudioProcessorEditor:: ExtendedTabbedButtonBar::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
+{
+    return false;
+}
+
+void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDropped(const SourceDetails& dragSourceDetails)
+{
+
+}
+
 juce::TabBarButton* Project13AudioProcessorEditor::ExtendedTabbedButtonBar::createTabButton(const juce::String& tabName, int tabIndex)
 {
     return new ExtendedTabBarButton(tabName, *this);
