@@ -28,6 +28,17 @@ static juce::String getDSPOptionName(Project13AudioProcessor::DSP_Option option)
     }
     return "NO SELECTION";
 }
+
+//==============================================================================
+Project13AudioProcessorEditor::ExtendedTabBarButton::ExtendedTabBarButton(const juce::String& name, juce::TabbedButtonBar& owner) : juce::TabBarButton(name, owner)
+{
+
+}
+
+juce::TabBarButton* Project13AudioProcessorEditor::ExtendedTabbedButtonBar::createTabButton(const juce::String& tabName, int tabIndex)
+{
+    return new ExtendedTabBarButton(tabName, *this);
+}
 //==============================================================================
 Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
@@ -55,10 +66,9 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
         }
 
         DBG(juce::Base64::toBase64(dspOrder.data(), dspOrder.size()));
-        
 
         audioProcessor.dspOrderFifo.push(dspOrder);
-        jassertfalse;
+        //jassertfalse;
     };
     addAndMakeVisible(dspOrderButton);
     addAndMakeVisible(dspOrderButton);
