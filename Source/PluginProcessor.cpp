@@ -70,6 +70,14 @@ Project13AudioProcessor::Project13AudioProcessor()
 #endif
 {
 
+    dspOrder =
+    {{
+        DSP_Option::Phase,
+        DSP_Option::Chorus,
+        DSP_Option::OverDrive,
+        DSP_Option::LadderFilter,
+    }};
+
     /*
      cached params
      */
@@ -474,8 +482,10 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     //[DONE]: add APVTS
     //[DONE]: create audio parameters for all dsp choices
-    //TODO: update DSP here from audio parameters
-    //TODO: save/load settings
+    //[DONE]: update DSP here from audio parameters
+    //TODO: update generalFilter coefficients
+    //TODO: add smoothers for all param updates 
+    //[DONE]: save/load settings
     //TODO: save/load DSP order
     //TODO: Drag-To-Reorder GUI
     //TODO: GUI design for each DSP instance?
@@ -520,9 +530,22 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     if (newDSPOrder != DSP_Order())
         dspOrder = newDSPOrder;
 
-    dspOrder = newDSPOrder;
+    /*
+    dspOrder = newDSPOrder; //dspOrder initialized
+   
+    Note: The DSP Order array has more elements than the initializer list
+    (https://en.cppreference.com/w/cpp/language/list_initialization) 
+    being used above.  The reason this works is because arrays are 
+    initialized with the default value of whatever type they're 
+    designed to fill.  In our case, this array is meant to hold 
+    DSP_Option instances.  Enumerations decay to integers, and 
+    the default integer value is 0.  Therefore, the dspOrder is 
+    filled in DSP_Option::Phase, by default.
+    */
+
     //now convert dspOrder into an array of pointers.
     DSP_Pointers dspPointers;
+    dspPointers.fill(nullptr);
 
     for (size_t i = 0; i < dspPointers.size(); ++i)
     {
@@ -571,13 +594,64 @@ bool Project13AudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* Project13AudioProcessor::createEditor()
 {
-    //return new Project13AudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new Project13AudioProcessorEditor (*this);
+    //return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
+template<>
+struct juce::VariantConverter<Project13AudioProcessor::DSP_Order>
+{
+    static Project13AudioProcessor::DSP_Order fromVar(const juce::var& v)
+    {
+        using T = Project13AudioProcessor::DSP_Order;
+        T dspOrder;
+
+        jassert(v.isBinaryData());
+        if (!v.isBinaryData())
+        {
+            dspOrder.fill(Project13AudioProcessor::DSP_Option::END_OF_LIST);
+        }
+        else
+        {
+            auto mb = *v.getBinaryData();
+
+            juce::MemoryInputStream mis(mb, false);
+            std::vector<int> arr;
+            while (!mis.isExhausted())
+            {
+                arr.push_back(mis.readInt());
+            }
+            jassert(arr.size() == dspOrder.size());
+            for (size_t i = 0; i < dspOrder.size(); ++i)
+            {
+                dspOrder[i] = static_cast<Project13AudioProcessor::DSP_Option>(arr[i]);
+            }
+        }
+
+        return dspOrder;
+    }
+    static juce::var toVar(const Project13AudioProcessor::DSP_Order& t)
+    {
+        juce::MemoryBlock mb;
+        //juce MOS uses scoping to complete writing to the memory block correctly.
+        {
+            juce::MemoryOutputStream mos(mb, false);
+
+            for (auto& v : t)
+            {
+                mos.writeInt(static_cast<int>(v));
+            }
+        }
+        return mb;
+    }
+};
+//==============================================================================
 void Project13AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
+    apvts.state.setProperty("dspOrder", 
+        juce::VariantConverter<Project13AudioProcessor::DSP_Order>::toVar(dspOrder), nullptr);
+
     juce::MemoryOutputStream mos(destData, false);
     apvts.state.writeToStream(mos);
 }
@@ -588,6 +662,12 @@ void Project13AudioProcessor::setStateInformation (const void* data, int sizeInB
     if (tree.isValid())
     {
         apvts.replaceState(tree);
+        if (apvts.state.hasProperty("dspOrder"))
+        {
+            auto order = juce::VariantConverter<Project13AudioProcessor::DSP_Order>::fromVar(apvts.state.getProperty("dspOrder"));
+            dspOrderFifo.push(order);
+        }
+        DBG(apvts.state.toXmlString());
     }
 }
 
