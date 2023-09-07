@@ -113,6 +113,33 @@ public:
     juce::AudioParameterFloat* generalFilterGain = nullptr;
     juce::AudioParameterBool* generalFilterBypass = nullptr;
 
+    juce::SmoothedValue<float>
+        phaserRateHzSmoother,
+        phaserCenterFreqHzSmoother,
+        phaserDepthPercentSmoother,
+        phaserFeedbackPercentSmoother,
+        phaserMixPercentSmoother,
+        chorusRateHzSmoother,
+        chorusDepthPercentSmoother,
+        chorusCenterDelayMsSmoother,
+        chorusFeedbackPercentSmoother,
+        chorusMixPercentSmoother,
+        overdriveSaturationSmoother,
+        ladderFilterCutoffHzSmoother,
+        ladderFilterResonanceSmoother,
+        ladderFilterDriveSmoother,
+        generalFilterFreqHzSmoother,
+        generalFilterQualitySmoother,
+        generalFilterGainSmoother;
+
+    std::vector<juce::SmoothedValue<float>*> getSmoothers();
+    enum class SmootherUpdateMode
+    {
+        initialize,
+        liveInRealtime
+    };
+    void updateSmoothersFromParams(int numSamplesToSkip, SmootherUpdateMode init);
+
 private:
     //==============================================================================
     DSP_Order dspOrder;
