@@ -736,7 +736,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //[DONE]: create audio parameters for all dsp choices
     //[DONE]: update DSP here from audio parameters
     //[DONE]: update generalFilter coefficients
-    //TODO: add smoothers for all param updates 
+    //[DONE]: add smoothers for all param updates 
     //[DONE]: save/load settings
     //[DONE]: save/load DSP order
     //[DONE]: bypass params for each DSP element
@@ -744,6 +744,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //TODO: Drag-To-Reorder GUI
     //TODO: GUI design for each DSP instance?
     //TODO: metering
+    //TODO: restore tabs in GUI when loading settings
     //[DONE]: prepare all DSP
     //TODO: wet/dry knob [BONUS]
     //TODO: mono & stereo versions [mono is BONUS]
@@ -751,6 +752,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //TODO: thread-safe filter updating [BONUS]
     //TODO: pre/post filtering [BONUS]
     //TODO: delay module [BONUS]
+    //TODO: save/load presets [BONUS]
 
     leftChannel.updateDSPFromParams();
     rightChannel.updateDSPFromParams();
