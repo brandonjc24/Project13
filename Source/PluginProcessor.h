@@ -69,6 +69,15 @@ public:
         END_OF_LIST
     };
 
+    enum class GeneralFilterMode
+    {
+        Peak,
+        Bandpass,
+        Notch,
+        Allpass,
+        END_OF_LIST
+    };
+
     using DSP_Order = std::array<DSP_Option, static_cast<size_t>(DSP_Option::END_OF_LIST)>;
     SimpleMBComp::Fifo<DSP_Order> dspOrderFifo;
 
@@ -158,6 +167,9 @@ private:
         void process(juce::dsp::AudioBlock<float> block, const DSP_Order& dspOrder);
     private:
         Project13AudioProcessor& p;
+
+        GeneralFilterMode filterMode = GeneralFilterMode::END_OF_LIST;
+        float filterFreq = 0.f, filterQ = 0.f, filterGain = -100.f;
     };
 
     MonoChannelDSP leftChannel{ *this };
