@@ -29,9 +29,26 @@ static juce::String getDSPOptionName(Project13AudioProcessor::DSP_Option option)
     return "NO SELECTION";
 }
 
+static Project13AudioProcessor::DSP_Option getDSPOptionFromName(juce::String name)
+{
+    if (name == "PHASE")
+        return Project13AudioProcessor::DSP_Option::Phase;
+    if (name == "CHORUS")
+        return Project13AudioProcessor::DSP_Option::Chorus;
+    if (name == "OVERDRIVE")
+        return Project13AudioProcessor::DSP_Option::OverDrive;
+    if (name == "LADDERFILTER")
+        return Project13AudioProcessor::DSP_Option::LadderFilter;
+    if (name == "GEN FILTER")
+        return Project13AudioProcessor::DSP_Option::GeneralFilter;
+
+    return Project13AudioProcessor::DSP_Option::END_OF_LIST;
+}
+
 //==============================================================================
-Project13AudioProcessorEditor::ExtendedTabBarButton::ExtendedTabBarButton(const juce::String& name, juce::TabbedButtonBar& owner) :
-    juce::TabBarButton(name, owner)
+ExtendedTabBarButton::ExtendedTabBarButton(const juce::String& name, juce::TabbedButtonBar& owner, Project13AudioProcessor::DSP_Option o) :
+    juce::TabBarButton(name, owner),
+    option(o)
 {
     constrainer = std::make_unique<HorizontalConstrainer>([&owner]()
         {
@@ -46,13 +63,13 @@ Project13AudioProcessorEditor::ExtendedTabBarButton::ExtendedTabBarButton(const 
 }
 
 //==============================================================================
-Project13AudioProcessorEditor::ExtendedTabbedButtonBar::ExtendedTabbedButtonBar() :
+ExtendedTabbedButtonBar::ExtendedTabbedButtonBar() :
     juce::TabbedButtonBar(juce::TabbedButtonBar::Orientation::TabsAtTop)
 {
 
 }
 
-bool Project13AudioProcessorEditor:: ExtendedTabbedButtonBar::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
+bool ExtendedTabbedButtonBar::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
 {
     if (dynamic_cast<ExtendedTabBarButton*>(dragSourceDetails.sourceComponent.get()))
         return true;
@@ -60,28 +77,47 @@ bool Project13AudioProcessorEditor:: ExtendedTabbedButtonBar::isInterestedInDrag
     return false;
 }
 
-void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragExit(const SourceDetails& dragSourceDetails)
+void ExtendedTabbedButtonBar::itemDragExit(const SourceDetails& dragSourceDetails)
 {
     //just call base class for now
     DBG("ExtendedTabbedButtonBar::itemDragExit");
     juce::DragAndDropTarget::itemDragExit(dragSourceDetails);
 }
 
-void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDropped(const SourceDetails& dragSourceDetails)
+void ExtendedTabbedButtonBar::itemDropped(const SourceDetails& dragSourceDetails)
 {
     DBG("item dropped");
     //find the dropped item.  lock the position in.
     resized();
+
+    //notify of the new tab order
+    auto tabs = getTabs();
+    Project13AudioProcessor::DSP_Order newOrder;
+
+    jassert(tabs.size() == newOrder.size());
+    for (size_t i = 0; i < tabs.size(); ++i)
+    {
+        auto tab = tabs[static_cast<int>(i)];
+        if (auto* etbb = dynamic_cast<ExtendedTabBarButton*>(tab))
+        {
+            newOrder[i] = etbb->getOption();
+        }
+    }
+
+    listeners.call([newOrder](Listener& l)
+        {
+            l.tabOrderChanged(newOrder);
+        });
 }
 
-void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragEnter(const SourceDetails& dragSourceDetails)
+void ExtendedTabbedButtonBar::itemDragEnter(const SourceDetails& dragSourceDetails)
 {
     DBG("ExtendedTabbedButtonBar::itemDragEnter");
     //just call base class for now
     juce::DragAndDropTarget::itemDragEnter(dragSourceDetails);
 }
 
-void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragMove(const SourceDetails& dragSourceDetails)
+void ExtendedTabbedButtonBar::itemDragMove(const SourceDetails& dragSourceDetails)
 {
     DBG("ETBB::itemDragMove");
     if (auto tabBarBeingDragged = dynamic_cast<ExtendedTabBarButton*>(dragSourceDetails.sourceComponent.get()))
@@ -142,7 +178,7 @@ void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragMove(const 
     }
 }
 
-void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::mouseDown(const juce::MouseEvent& e)
+void ExtendedTabbedButtonBar::mouseDown(const juce::MouseEvent& e)
 {
     DBG("ExtendedTabbedButtonBar::mouseDown");
     if (auto tabBarBeingDragged = dynamic_cast<ExtendedTabBarButton*>(e.originalComponent))
@@ -152,21 +188,37 @@ void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::mouseDown(const juc
     }
 }
 
-juce::TabBarButton* Project13AudioProcessorEditor::ExtendedTabbedButtonBar::createTabButton(const juce::String& tabName, int tabIndex)
+void Project13AudioProcessorEditor::tabOrderChanged(Project13AudioProcessor::DSP_Order newOrder)
 {
-    auto etbb = std::make_unique<ExtendedTabBarButton>(tabName, *this);
+    audioProcessor.dspOrderFifo.push(newOrder);
+}
+
+juce::TabBarButton* ExtendedTabbedButtonBar::createTabButton(const juce::String& tabName, int tabIndex)
+{
+    auto dspOption = getDSPOptionFromName(tabName);
+    auto etbb = std::make_unique<ExtendedTabBarButton>(tabName, *this, dspOption);
     etbb->addMouseListener(this, false);
 
     return etbb.release();
 }
 
-juce::TabBarButton* Project13AudioProcessorEditor::ExtendedTabbedButtonBar::findDraggedItem(const SourceDetails& dragSourceDetails)
+void ExtendedTabbedButtonBar::addListener(ExtendedTabbedButtonBar::Listener* l)
+{
+    listeners.add(l);
+}
+
+void ExtendedTabbedButtonBar::removeListener(ExtendedTabbedButtonBar::Listener* l)
+{
+    listeners.remove(l);
+}
+
+juce::TabBarButton* ExtendedTabbedButtonBar::findDraggedItem(const SourceDetails& dragSourceDetails)
 {
     return getTabButton(findDraggedItemIndex(dragSourceDetails));
 }
 
 
-int Project13AudioProcessorEditor::ExtendedTabbedButtonBar::findDraggedItemIndex(const SourceDetails& dragSourceDetails)
+int ExtendedTabbedButtonBar::findDraggedItemIndex(const SourceDetails& dragSourceDetails)
 {
     if (auto tabBarBeingDragged = dynamic_cast<ExtendedTabBarButton*>(dragSourceDetails.sourceComponent.get()))
     {
@@ -180,7 +232,7 @@ int Project13AudioProcessorEditor::ExtendedTabbedButtonBar::findDraggedItemIndex
     return -1;
 }
 
-juce::Array<juce::TabBarButton*> Project13AudioProcessorEditor::ExtendedTabbedButtonBar::getTabs()
+juce::Array<juce::TabBarButton*> ExtendedTabbedButtonBar::getTabs()
 {
     auto numTabs = getNumTabs();
     auto tabs = juce::Array<juce::TabBarButton*>();
@@ -193,12 +245,12 @@ juce::Array<juce::TabBarButton*> Project13AudioProcessorEditor::ExtendedTabbedBu
     return tabs;
 }
 
-Project13AudioProcessorEditor::HorizontalConstrainer::HorizontalConstrainer(std::function<juce::Rectangle<int>()> confinerBoundsGetter, std::function<juce::Rectangle<int>()> confineeBoundsGetter) : boundsToConfineToGetter(confinerBoundsGetter), boundsOfConfineeGetter(confineeBoundsGetter)
+HorizontalConstrainer::HorizontalConstrainer(std::function<juce::Rectangle<int>()> confinerBoundsGetter, std::function<juce::Rectangle<int>()> confineeBoundsGetter) : boundsToConfineToGetter(confinerBoundsGetter), boundsOfConfineeGetter(confineeBoundsGetter)
 {
 
 }
 
-void Project13AudioProcessorEditor::HorizontalConstrainer::checkBounds(juce::Rectangle<int>& bounds,
+void HorizontalConstrainer::checkBounds(juce::Rectangle<int>& bounds,
     const juce::Rectangle<int>& previousBounds,
     const juce::Rectangle<int>& limits,
     bool isStretchingTop,
@@ -273,10 +325,14 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
     addAndMakeVisible(dspOrderButton);
     addAndMakeVisible(dspOrderButton);
     addAndMakeVisible(tabbedComponent);
+
+    tabbedComponent.addListener(this);
+    setSize(400, 300);
 }
 
 Project13AudioProcessorEditor::~Project13AudioProcessorEditor()
 {
+    tabbedComponent.removeListener(this);
 }
 
 //==============================================================================
