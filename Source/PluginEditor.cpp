@@ -54,17 +54,118 @@ Project13AudioProcessorEditor::ExtendedTabbedButtonBar::ExtendedTabbedButtonBar(
 
 bool Project13AudioProcessorEditor:: ExtendedTabbedButtonBar::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
 {
+    if (dynamic_cast<ExtendedTabBarButton*>(dragSourceDetails.sourceComponent.get()))
+        return true;
+
     return false;
+}
+
+void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragExit(const SourceDetails& dragSourceDetails)
+{
+    //just call base class for now
+    DBG("ExtendedTabbedButtonBar::itemDragExit");
+    juce::DragAndDropTarget::itemDragExit(dragSourceDetails);
 }
 
 void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDropped(const SourceDetails& dragSourceDetails)
 {
+    DBG("item dropped");
+    //find the dropped item.  lock the position in.
+}
 
+void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragEnter(const SourceDetails& dragSourceDetails)
+{
+    DBG("ExtendedTabbedButtonBar::itemDragEnter");
+    //just call base class for now
+    juce::DragAndDropTarget::itemDragEnter(dragSourceDetails);
+}
+
+void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragMove(const SourceDetails& dragSourceDetails)
+{
+    DBG("ETBB::itemDragMove");
+    if (auto tabBarBeingDragged = dynamic_cast<ExtendedTabBarButton*>(dragSourceDetails.sourceComponent.get()))
+    {
+        //find tabBarBeingDragged in the tabs[] container.
+        //tabs[] is private so you must use:
+        //TabBarButton* getTabButton (int index) const
+        //and
+        //getNumTabs()
+        //to first get a list of tabs to search through
+
+        auto numTabs = getNumTabs();
+        auto tabs = juce::Array<juce::TabBarButton*>();
+        tabs.resize(numTabs);
+        for (int i = 0; i < numTabs; ++i)
+        {
+            tabs.getReference(i) = getTabButton(i);
+        }
+
+        //now search
+        auto idx = tabs.indexOf(tabBarBeingDragged);
+        if (idx == -1)
+        {
+            DBG("failed to find tab being dragged in list of tabs");
+            jassertfalse;
+            return;
+        }
+
+        //find the tab that tabBarBeingDragged is colliding with.
+        //it might be on the right
+        //it might be on the left
+        //if it's on the right,
+        //if tabBarBeingDragged's x is > nextTab.getX() + nextTab.getWidth() * 0.5, swap their position
+        auto previousTabIndex = idx - 1;
+        auto nextTabIndex = idx + 1;
+        auto previousTab = getTabButton(previousTabIndex);
+        auto nextTab = getTabButton(nextTabIndex);
+
+        if (previousTab == nullptr && nextTab != nullptr)
+        {
+            //you're in the 0th position
+            if (tabBarBeingDragged->getX() > nextTab->getX() + nextTab->getWidth() * 0.5)
+            {
+                moveTab(idx, nextTabIndex);
+            }
+        }
+        else if (previousTab != nullptr && nextTab == nullptr)
+        {
+            //you're in the last position
+            if (tabBarBeingDragged->getX() < previousTab->getX() + previousTab->getWidth() * 0.5)
+            {
+                moveTab(idx, previousTabIndex);
+            }
+        }
+        else
+        {
+            //you're in the middle
+            if ((tabBarBeingDragged->getX() + tabBarBeingDragged->getWidth()) > nextTab->getX() + nextTab->getWidth() * 0.5)
+            {
+                moveTab(idx, nextTabIndex);
+            }
+            else if (tabBarBeingDragged->getX() < previousTab->getX() + previousTab->getWidth() * 0.5)
+            {
+                moveTab(idx, previousTabIndex);
+            }
+        }
+    }
+}
+
+void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::mouseDown(const juce::MouseEvent& e)
+{
+    DBG("ExtendedTabbedButtonBar::mouseDown");
+    if (auto tabBarBeingDragged = dynamic_cast<ExtendedTabBarButton*>(e.originalComponent))
+    {
+        startDragging(tabBarBeingDragged->TabBarButton::getTitle(),
+            tabBarBeingDragged);
+    }
 }
 
 juce::TabBarButton* Project13AudioProcessorEditor::ExtendedTabbedButtonBar::createTabButton(const juce::String& tabName, int tabIndex)
 {
-    return new ExtendedTabBarButton(tabName, *this);
+    auto etbb = std::make_unique<ExtendedTabBarButton>(tabName, *this);
+    etbb->addMouseListener(this, false);
+
+    return etbb.release();
 }
 
 Project13AudioProcessorEditor::HorizontalConstrainer::HorizontalConstrainer(std::function<juce::Rectangle<int>()> confinerBoundsGetter, std::function<juce::Rectangle<int>()> confineeBoundsGetter) : boundsToConfineToGetter(confinerBoundsGetter), boundsOfConfineeGetter(confineeBoundsGetter)
