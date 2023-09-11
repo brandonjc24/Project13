@@ -71,6 +71,7 @@ void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDropped(const S
 {
     DBG("item dropped");
     //find the dropped item.  lock the position in.
+    resized();
 }
 
 void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragEnter(const SourceDetails& dragSourceDetails)
@@ -92,16 +93,7 @@ void Project13AudioProcessorEditor::ExtendedTabbedButtonBar::itemDragMove(const 
         //getNumTabs()
         //to first get a list of tabs to search through
 
-        auto numTabs = getNumTabs();
-        auto tabs = juce::Array<juce::TabBarButton*>();
-        tabs.resize(numTabs);
-        for (int i = 0; i < numTabs; ++i)
-        {
-            tabs.getReference(i) = getTabButton(i);
-        }
-
-        //now search
-        auto idx = tabs.indexOf(tabBarBeingDragged);
+        auto idx = findDraggedItemIndex(dragSourceDetails);
         if (idx == -1)
         {
             DBG("failed to find tab being dragged in list of tabs");
@@ -166,6 +158,39 @@ juce::TabBarButton* Project13AudioProcessorEditor::ExtendedTabbedButtonBar::crea
     etbb->addMouseListener(this, false);
 
     return etbb.release();
+}
+
+juce::TabBarButton* Project13AudioProcessorEditor::ExtendedTabbedButtonBar::findDraggedItem(const SourceDetails& dragSourceDetails)
+{
+    return getTabButton(findDraggedItemIndex(dragSourceDetails));
+}
+
+
+int Project13AudioProcessorEditor::ExtendedTabbedButtonBar::findDraggedItemIndex(const SourceDetails& dragSourceDetails)
+{
+    if (auto tabBarBeingDragged = dynamic_cast<ExtendedTabBarButton*>(dragSourceDetails.sourceComponent.get()))
+    {
+        auto tabs = getTabs();
+
+        //now search
+        auto idx = tabs.indexOf(tabBarBeingDragged);
+        return idx;
+    }
+
+    return -1;
+}
+
+juce::Array<juce::TabBarButton*> Project13AudioProcessorEditor::ExtendedTabbedButtonBar::getTabs()
+{
+    auto numTabs = getNumTabs();
+    auto tabs = juce::Array<juce::TabBarButton*>();
+    tabs.resize(numTabs);
+    for (int i = 0; i < numTabs; ++i)
+    {
+        tabs.getReference(i) = getTabButton(i);
+    }
+
+    return tabs;
 }
 
 Project13AudioProcessorEditor::HorizontalConstrainer::HorizontalConstrainer(std::function<juce::Rectangle<int>()> confinerBoundsGetter, std::function<juce::Rectangle<int>()> confineeBoundsGetter) : boundsToConfineToGetter(confinerBoundsGetter), boundsOfConfineeGetter(confineeBoundsGetter)
