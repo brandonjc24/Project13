@@ -9,7 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-static juce::String getDSPOptionName(Project13AudioProcessor::DSP_Option option)
+static juce::String getNameFromDSPOption(Project13AudioProcessor::DSP_Option option)
 {
     switch (option)
     {
@@ -60,6 +60,20 @@ ExtendedTabBarButton::ExtendedTabBarButton(const juce::String& name, juce::Tabbe
         });
     constrainer->setMinimumOnscreenAmounts(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
 
+}
+
+int ExtendedTabBarButton::getBestTabLength(int depth)
+{
+    auto bestWidth = getLookAndFeel().getTabButtonBestWidth(*this, depth);
+
+    auto& bar = getTabbedButtonBar();
+    /*
+     we want the tabs to occupy the entire TabBar width.
+     so, after computing the best width for the button and depth,
+     we choose whichever value is bigger, the bestWidth, or an equal division of the bar's width based on the number of tabs in the bar.
+     */
+    return juce::jmax(bestWidth,
+        bar.getWidth() / bar.getNumTabs());
 }
 
 //==============================================================================
@@ -320,7 +334,7 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
             auto entry = r.nextInt(range);
             v = static_cast<Project13AudioProcessor::DSP_Option>(entry);
 
-            tabbedComponent.addTab(getDSPOptionName(v), juce::Colours::lightslategrey, -1);
+            tabbedComponent.addTab(getNameFromDSPOption(v), juce::Colours::lightslategrey, -1);
         }
 
         DBG(juce::Base64::toBase64(dspOrder.data(), dspOrder.size()));
@@ -333,7 +347,7 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
     addAndMakeVisible(tabbedComponent);
 
     tabbedComponent.addListener(this);
-    setSize(400, 300);
+    setSize(600, 400);
 }
 
 Project13AudioProcessorEditor::~Project13AudioProcessorEditor()

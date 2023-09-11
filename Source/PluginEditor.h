@@ -78,20 +78,21 @@ struct ExtendedTabBarButton : juce::TabBarButton
     
     juce::ComponentDragger dragger;
     std::unique_ptr<HorizontalConstrainer> constrainer;
-    void mouseDown(const juce::MouseEvent& e)
+    void mouseDown(const juce::MouseEvent& e) override
     {
         toFront(true);
         dragger.startDraggingComponent(this, e);
         juce::TabBarButton::mouseDown(e);
     }
 
-    void mouseDrag(const juce::MouseEvent& e)
+    void mouseDrag(const juce::MouseEvent& e) override
     {
         dragger.dragComponent(this, e, constrainer.get());
     }
 
     Project13AudioProcessor::DSP_Option getOption() const { return option; }
 
+    int getBestTabLength(int depth) override;
 private:
     Project13AudioProcessor::DSP_Option option;
 };
