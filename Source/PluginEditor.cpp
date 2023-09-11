@@ -66,7 +66,12 @@ ExtendedTabBarButton::ExtendedTabBarButton(const juce::String& name, juce::Tabbe
 ExtendedTabbedButtonBar::ExtendedTabbedButtonBar() :
     juce::TabbedButtonBar(juce::TabbedButtonBar::Orientation::TabsAtTop)
 {
+    auto img = juce::Image(juce::Image::PixelFormat::SingleChannel, 1, 1, true);
 
+    auto gfx = juce::Graphics(img);
+    gfx.fillAll(juce::Colours::transparentBlack);
+
+    dragImage = juce::ScaledImage(img, 1.0);
 }
 
 bool ExtendedTabbedButtonBar::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
@@ -166,11 +171,11 @@ void ExtendedTabbedButtonBar::itemDragMove(const SourceDetails& dragSourceDetail
         else
         {
             //you're in the middle
-            if ((tabBarBeingDragged->getX() + tabBarBeingDragged->getWidth()) > nextTab->getX() + nextTab->getWidth() * 0.5)
+            if ((tabBarBeingDragged->getX() + tabBarBeingDragged->getWidth() * 0.75) > nextTab->getX() + nextTab->getWidth() * 0.5)
             {
                 moveTab(idx, nextTabIndex);
             }
-            else if (tabBarBeingDragged->getX() < previousTab->getX() + previousTab->getWidth() * 0.5)
+            else if ((tabBarBeingDragged->getX() + tabBarBeingDragged->getWidth() * 0.25) < previousTab->getX() + previousTab->getWidth() * 0.5)
             {
                 moveTab(idx, previousTabIndex);
             }
@@ -184,7 +189,8 @@ void ExtendedTabbedButtonBar::mouseDown(const juce::MouseEvent& e)
     if (auto tabBarBeingDragged = dynamic_cast<ExtendedTabBarButton*>(e.originalComponent))
     {
         startDragging(tabBarBeingDragged->TabBarButton::getTitle(),
-            tabBarBeingDragged);
+            tabBarBeingDragged,
+            dragImage);
     }
 }
 

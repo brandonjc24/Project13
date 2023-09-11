@@ -747,7 +747,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //TODO: restore tabs in GUI when loading settings
     //[DONE]: prepare all DSP
     //[DONE]: snap dropped tabs to correct position
-    //TODO: hide dragged tab image or stop dragging the tag and constrain dragged image to X axis only. 
+    //[DONE]: hide dragged tab image or stop dragging the tag and constrain dragged image to X axis only. 
     //TODO: wet/dry knob [BONUS]
     //TODO: mono & stereo versions [mono is BONUS]
     //TODO: modulators [BONUS]
