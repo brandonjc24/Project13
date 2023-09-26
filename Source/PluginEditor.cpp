@@ -318,6 +318,7 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
 {
 
     addAndMakeVisible(tabbedComponent);
+    addAndMakeVisible(dspGUI);
 
     tabbedComponent.addListener(this);
     startTimerHz(30);
@@ -344,7 +345,8 @@ void Project13AudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
     bounds.removeFromTop(10);
-    tabbedComponent.setBounds(bounds.withHeight(30));
+    tabbedComponent.setBounds(bounds.removeFromTop(30));
+    dspGUI.setBounds(bounds);
 }
 
 void Project13AudioProcessorEditor::timerCallback()

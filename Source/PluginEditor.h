@@ -97,6 +97,20 @@ private:
     Project13AudioProcessor::DSP_Option option;
 };
 
+//==============================================================================
+struct DSP_Gui : juce::Component
+{
+    DSP_Gui() {}
+
+    void resized() override {}
+    void paint(juce::Graphics& g) override { g.fillAll(juce::Colours::red); }
+
+    void rebuildInterface(std::vector<juce::RangedAudioParameter*> params);
+
+    std::vector<std::unique_ptr<juce::Slider> > sliders;
+    std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> attachments;
+};
+//==============================================================================
 
 class Project13AudioProcessorEditor : public juce::AudioProcessorEditor, 
     ExtendedTabbedButtonBar::Listener, juce::Timer
@@ -117,6 +131,7 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     Project13AudioProcessor& audioProcessor;
+    DSP_Gui dspGUI;
 
     //    juce::TabbedComponent tabbedComponent { juce::TabbedButtonBar::Orientation::TabsAtTop };
     ExtendedTabbedButtonBar tabbedComponent;
