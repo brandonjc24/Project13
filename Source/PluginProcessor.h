@@ -140,6 +140,7 @@ public:
     };
     void updateSmoothersFromParams(int numSamplesToSkip, SmootherUpdateMode init);
 
+    std::vector<juce::RangedAudioParameter*> getParamsForOptions(DSP_Option option);
 private:
     //==============================================================================
     DSP_Order dspOrder;
