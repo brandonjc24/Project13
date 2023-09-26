@@ -169,7 +169,7 @@ void ExtendedTabbedButtonBar::itemDragMove(const SourceDetails& dragSourceDetail
         if (previousTab == nullptr && nextTab != nullptr)
         {
             //you're in the 0th position
-            if (tabBarBeingDragged->getX() > nextTab->getX() + nextTab->getWidth() * 0.5)
+            if (tabBarBeingDragged->getX() + tabBarBeingDragged->getWidth() > nextTab->getX() + nextTab->getWidth() * 0.5)
             {
                 moveTab(idx, nextTabIndex);
             }
@@ -185,11 +185,11 @@ void ExtendedTabbedButtonBar::itemDragMove(const SourceDetails& dragSourceDetail
         else
         {
             //you're in the middle
-            if ((tabBarBeingDragged->getX() + tabBarBeingDragged->getWidth() * 0.75) > nextTab->getX() + nextTab->getWidth() * 0.5)
+            if ((tabBarBeingDragged->getX() + tabBarBeingDragged->getWidth()) > nextTab->getX() + nextTab->getWidth() * 0.5)
             {
                 moveTab(idx, nextTabIndex);
             }
-            else if ((tabBarBeingDragged->getX() + tabBarBeingDragged->getWidth() * 0.25) < previousTab->getX() + previousTab->getWidth() * 0.5)
+            else if (tabBarBeingDragged->getX() < previousTab->getX() + previousTab->getWidth() * 0.5)
             {
                 moveTab(idx, previousTabIndex);
             }
@@ -315,9 +315,6 @@ void HorizontalConstrainer::checkBounds(juce::Rectangle<int>& bounds,
 Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    setSize (400, 300);
 
     dspOrderButton.onClick = [this]()
     {
@@ -334,6 +331,8 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
             auto entry = r.nextInt(range);
             v = static_cast<Project13AudioProcessor::DSP_Option>(entry);
 
+            auto name = getNameFromDSPOption(v);
+            DBG("creating tab: " << name);
             tabbedComponent.addTab(getNameFromDSPOption(v), juce::Colours::lightslategrey, -1);
         }
 
@@ -347,6 +346,7 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
     addAndMakeVisible(tabbedComponent);
 
     tabbedComponent.addListener(this);
+    startTimerHz(30);
     setSize(600, 400);
 }
 
@@ -372,4 +372,38 @@ void Project13AudioProcessorEditor::resized()
     dspOrderButton.setBounds(bounds.removeFromTop(30).withSizeKeepingCentre(150, 30));
     bounds.removeFromTop(10);
     tabbedComponent.setBounds(bounds.withHeight(30));
+}
+
+void Project13AudioProcessorEditor::timerCallback()
+{
+
+    if (audioProcessor.restoreDspOrderFifo.getNumAvailableForReading() == 0)
+        return;
+
+    using T = Project13AudioProcessor::DSP_Order;
+    T newOrder;
+    newOrder.fill(Project13AudioProcessor::DSP_Option::END_OF_LIST);
+    auto empty = newOrder;
+    while (audioProcessor.restoreDspOrderFifo.pull(newOrder))
+    {
+        ; // do nothing.   you'll do something with the most recently pulled order
+    }
+
+    if (newOrder != empty) //if you pulled nothing, newOrder will be filled with END_OF_LIST
+    {
+
+        addTabsFromDSPOrder(newOrder);
+    }
+}
+
+void Project13AudioProcessorEditor::addTabsFromDSPOrder(Project13AudioProcessor::DSP_Order newOrder)
+{
+    tabbedComponent.clearTabs();
+    for (auto v : newOrder)
+    {
+        tabbedComponent.addTab(getNameFromDSPOption(v), juce::Colours::white, -1);
+    }
+
+    //if the order is identical to the current order used by the audio side, this push will do nothing.
+    audioProcessor.dspOrderFifo.push(newOrder);
 }
