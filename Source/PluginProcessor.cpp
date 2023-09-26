@@ -741,7 +741,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //[DONE]: save/load DSP order
     //[DONE]: bypass params for each DSP element
     //TODO: Filters are mono, not stereo
-    //TODO: Drag-To-Reorder GUI
+    //[DONE]: Drag-To-Reorder GUI
     //TODO: GUI design for each DSP instance?
     //TODO: metering
     //TODO: restore tabs in GUI when loading settings

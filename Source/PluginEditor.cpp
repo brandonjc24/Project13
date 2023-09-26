@@ -194,6 +194,7 @@ void ExtendedTabbedButtonBar::itemDragMove(const SourceDetails& dragSourceDetail
                 moveTab(idx, previousTabIndex);
             }
         }
+        tabBarBeingDragged->toFront(true);
     }
 }
 
