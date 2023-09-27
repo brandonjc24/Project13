@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../SimpleMultiBandComp/Source/GUI/RotarySliderWithLabels.h"
 
 static juce::String getNameFromDSPOption(Project13AudioProcessor::DSP_Option option)
 {
@@ -431,7 +432,7 @@ void DSP_Gui::rebuildInterface(std::vector<juce::RangedAudioParameter*> params)
         }
         else
         {
-            sliders.push_back(std::make_unique<juce::Slider>());
+            sliders.push_back(std::make_unique<RotarySliderWithLabels>(p, p->label, p->getName(100)));
             auto& slider = *sliders.back();
 
             slider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
@@ -448,6 +449,11 @@ void DSP_Gui::rebuildInterface(std::vector<juce::RangedAudioParameter*> params)
         addAndMakeVisible(btn.get());
 
     resized();
+}
+
+DSP_Gui::DSP_Gui(Project13AudioProcessor& proc) : processor(proc)
+{
+
 }
 
 void DSP_Gui::resized()
