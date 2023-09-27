@@ -5,6 +5,19 @@
               companyName="BColes">
   <MAINGROUP id="GHDuIL" name="Project13">
     <GROUP id="{AAB082BF-C20A-B8C4-E2CE-3FE7CEBE26AC}" name="Source">
+      <GROUP id="{E7DA3B24-DF81-6890-63DD-46AFD27F6B8A}" name="GUI">
+        <FILE id="aPJXoI" name="CustomButtons.cpp" compile="1" resource="0"
+              file="SimpleMultiBandComp/Source/GUI/CustomButtons.cpp"/>
+        <FILE id="qGKch6" name="CustomButtons.h" compile="0" resource="0" file="SimpleMultiBandComp/Source/GUI/CustomButtons.h"/>
+        <FILE id="WfkRb2" name="LookAndFeel.cpp" compile="1" resource="0" file="SimpleMultiBandComp/Source/GUI/LookAndFeel.cpp"/>
+        <FILE id="nhRJDe" name="LookAndFeel.h" compile="0" resource="0" file="SimpleMultiBandComp/Source/GUI/LookAndFeel.h"/>
+        <FILE id="TJDZMT" name="RotarySliderWithLabels.cpp" compile="1" resource="0"
+              file="SimpleMultiBandComp/Source/GUI/RotarySliderWithLabels.cpp"/>
+        <FILE id="I4JZvX" name="RotarySliderWithLabels.h" compile="0" resource="0"
+              file="SimpleMultiBandComp/Source/GUI/RotarySliderWithLabels.h"/>
+        <FILE id="XdlWN1" name="Utilities.cpp" compile="1" resource="0" file="SimpleMultiBandComp/Source/GUI/Utilities.cpp"/>
+        <FILE id="SF2zQ4" name="Utilities.h" compile="0" resource="0" file="SimpleMultiBandComp/Source/GUI/Utilities.h"/>
+      </GROUP>
       <GROUP id="{179FEB93-FE5A-F9DF-DCF6-147EC627D0C6}" name="DSP">
         <FILE id="iGrcDM" name="Fifo.h" compile="0" resource="0" file="SimpleMultiBandComp/Source/DSP/Fifo.h"/>
       </GROUP>
