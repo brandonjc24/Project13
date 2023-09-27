@@ -319,7 +319,7 @@ void HorizontalConstrainer::checkBounds(juce::Rectangle<int>& bounds,
 Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-
+    setLookAndFeel(&lookAndFeel);
     addAndMakeVisible(tabbedComponent);
     addAndMakeVisible(dspGUI);
 
@@ -330,6 +330,7 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
 
 Project13AudioProcessorEditor::~Project13AudioProcessorEditor()
 {
+    setLookAndFeel(nullptr);
     tabbedComponent.removeListener(this);
 }
 

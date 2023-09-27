@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include <LookAndFeel.h>
 
 //==============================================================================
 /**
@@ -139,6 +140,8 @@ private:
     // access the processor object that created it.
     Project13AudioProcessor& audioProcessor;
     DSP_Gui dspGUI { audioProcessor };
+
+    LookAndFeel lookAndFeel;
 
     //    juce::TabbedComponent tabbedComponent { juce::TabbedButtonBar::Orientation::TabsAtTop };
     ExtendedTabbedButtonBar tabbedComponent;

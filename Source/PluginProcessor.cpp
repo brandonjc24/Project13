@@ -407,7 +407,6 @@ void Project13AudioProcessor::MonoChannelDSP::prepare(const juce::dsp::ProcessSp
         p->prepare(spec);
         p->reset();
     }
-    overdrive.dsp.setCutoffFrequencyHz(20000.f);
 }
 
 void Project13AudioProcessor::releaseResources()
