@@ -134,6 +134,7 @@ public:
         generalFilterQualitySmoother,
         generalFilterGainSmoother;
 
+    juce::Atomic<bool> guiNeedsLatestDspOrder{ false };
     std::vector<juce::SmoothedValue<float>*> getSmoothers();
     enum class SmootherUpdateMode
     {

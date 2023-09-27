@@ -792,6 +792,11 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         We will also need a counter to keep track of the start sample for a particular sub-block (10).
          */
 
+    if (guiNeedsLatestDspOrder.compareAndSetBool(false, true))
+    {
+        restoreDspOrderFifo.push(dspOrder);
+    }
+
     auto samplesRemaining = buffer.getNumSamples(); // (1) 
     auto maxSamplesToProcess = juce::jmin(samplesRemaining, 64); // (2)
 
