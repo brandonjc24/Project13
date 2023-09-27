@@ -84,6 +84,8 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Settings", createParameterLayout() };
 
+    juce::AudioParameterInt* selectedTab = nullptr;
+
     juce::AudioParameterFloat* phaserRateHz = nullptr;
     juce::AudioParameterFloat* phaserCenterFreqHz = nullptr;
     juce::AudioParameterFloat* phaserDepthPercent = nullptr;

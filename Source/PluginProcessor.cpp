@@ -9,6 +9,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+auto getSelectedTabName() { return juce::String("Selected Tab"); }
+
 auto getPhaserRateName() { return juce::String("Phaser RateHz"); }
 auto getPhaserCenterFreqName() { return juce::String("Phaser Center FreqHz"); }
 auto getPhaserDepthName() { return juce::String("Phaser Depth %"); }
@@ -164,6 +166,17 @@ Project13AudioProcessor::Project13AudioProcessor()
         &getGeneralFilterBypassName,
     };
 
+    auto intParams = std::array
+    {
+        &selectedTab,
+    };
+
+    auto intFuncs = std::array
+    {
+        &getSelectedTabName,
+    };
+
+    initCachedParams<juce::AudioParameterInt*>(intParams, intFuncs);
     initCachedParams<juce::AudioParameterBool*>(bypassParams, bypassNameFuncs);
     jassert(floatParams.size() == floatNameFuncs.size());
     initCachedParams<juce::AudioParameterFloat*>(floatParams, floatNameFuncs);
@@ -447,6 +460,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout Project13AudioProcessor::cre
 
     const int versionHint = 1;
 
+    auto name = getSelectedTabName();
+    layout.add(std::make_unique<juce::AudioParameterInt>(juce::ParameterID{ name, versionHint }, name, 0, static_cast<int>(DSP_Option::END_OF_LIST) - 1, static_cast<int>(DSP_Option::Chorus)));
+
     /*
      phaser:
      rate: Hz
@@ -457,7 +473,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout Project13AudioProcessor::cre
      */
 
      //phaser rate: LFO Hz
-    auto name = getPhaserRateName();
+    name = getPhaserRateName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint }, name, juce::NormalisableRange<float>(0.01f, 2.f, 0.01f, 1.f), 0.2f, "Hz"));
     //phaser depth: 0 - 1
     name = getPhaserDepthName();
@@ -715,12 +731,6 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
@@ -766,9 +776,6 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     if (newDSPOrder != DSP_Order())
         dspOrder = newDSPOrder;
 
-//    auto block = juce::dsp::AudioBlock<float>(buffer);
-//    leftChannel.process(block.getSingleChannelBlock(0), dspOrder);
-//    rightChannel.process(block.getSingleChannelBlock(1), dspOrder);
 
         /*
          process max 64 samples at a time.
