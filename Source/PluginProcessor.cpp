@@ -509,7 +509,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout Project13AudioProcessor::cre
     name = getChorusRateName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
         name,
-        juce::NormalisableRange<float>(0.01f, 100.f, 0.01f, 1.f),
+        juce::NormalisableRange<float>(0.01f, 99.f, 0.01f, 1.f),
         0.2f,
         "Hz"));
     //depth: 0 to 1
@@ -523,7 +523,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout Project13AudioProcessor::cre
     name = getChorusCenterDelayName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
         name,
-        juce::NormalisableRange<float>(1.f, 100.f, 0.1f, 1.f),
+        juce::NormalisableRange<float>(1.f, 99.f, 0.1f, 1.f),
         7.f,
         "%"));
     //feedback: -1 to 1
