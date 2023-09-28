@@ -149,6 +149,7 @@ private:
 
     //    juce::TabbedComponent tabbedComponent { juce::TabbedButtonBar::Orientation::TabsAtTop };
     ExtendedTabbedButtonBar tabbedComponent;
+    static constexpr int meterWidth = 80;
     std::unique_ptr<juce::ParameterAttachment> selectedTabAttachment;
     void addTabsFromDSPOrder(Project13AudioProcessor::DSP_Order);
     void rebuildInterface();

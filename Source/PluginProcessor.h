@@ -81,6 +81,9 @@ public:
     //==============================================================================
     static constexpr int NEGATIVE_INFINITY = -72;
     static constexpr int MAX_DECIBELS = 12;
+    static constexpr int fontHeight = 24;
+    static constexpr int meterChanWidth = 24;
+    static constexpr int tickIndent = 8;
     //==============================================================================
 
     using DSP_Order = std::array<DSP_Option, static_cast<size_t>(DSP_Option::END_OF_LIST)>;

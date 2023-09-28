@@ -355,7 +355,7 @@ Project13AudioProcessorEditor::Project13AudioProcessorEditor (Project13AudioProc
 
     tabbedComponent.addListener(this);
     startTimerHz(30);
-    setSize(600, 400);
+    setSize(768, 400);
 }
 
 Project13AudioProcessorEditor::~Project13AudioProcessorEditor()
@@ -365,27 +365,142 @@ Project13AudioProcessorEditor::~Project13AudioProcessorEditor()
 }
 
 //==============================================================================
-void Project13AudioProcessorEditor::paint (juce::Graphics& g)
+void Project13AudioProcessorEditor::paint(juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    g.setColour (juce::Colours::white);
-    g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+    g.setColour(juce::Colours::white);
+    g.setFont(15.0f);
+
+    auto bounds = getLocalBounds();
+
+    /*
+     This lambda draws the rectangle that represents the RMS level
+     if the RMS is over 0dbFS, the portion over 0dbFS is drawn in red.
+     */
+    auto fillMeter = [&](auto rect, auto& rmsSource)
+    {
+        g.setColour(juce::Colours::black);
+        g.fillRect(rect);
+
+        auto rms = rmsSource.get();
+        if (rms > 1.0f)
+        {
+            g.setColour(juce::Colours::red);
+            //this defines a point at 0dbFS
+            auto lowerLeft = juce::Point<float>(rect.getX(),
+                juce::jmap<float>(juce::Decibels::gainToDecibels(1.f),
+                    audioProcessor.NEGATIVE_INFINITY,
+                    audioProcessor.MAX_DECIBELS,
+                    rect.getBottom(),
+                    rect.getY()));
+            //this defines a point at rms dbFS
+            auto upperRight = juce::Point<float>(rect.getRight(),
+                juce::jmap<float>(juce::Decibels::gainToDecibels(rms),
+                    audioProcessor.NEGATIVE_INFINITY,
+                    audioProcessor.MAX_DECIBELS,
+                    rect.getBottom(),
+                    rect.getY()));
+            //this defines a rectangle using those points.
+            auto overTHRect = juce::Rectangle<float>(lowerLeft, upperRight);
+            //this fills that rectangle in red.
+            g.fillRect(overTHRect);
+        }
+
+        //this clamps the rms level to 1.0, since the over-threshold if() draws everything over 0dbFS
+        rms = juce::jmin<float>(rms, 1.0f);
+        g.setColour(juce::Colours::green);
+        //this draws the rectangle that represents the signal level below 0dbFS
+        g.fillRect(rect.withY(juce::jmap<float>(juce::Decibels::gainToDecibels(rms),
+            audioProcessor.NEGATIVE_INFINITY,
+            audioProcessor.MAX_DECIBELS,
+            rect.getBottom(),
+            rect.getY()))
+            .withBottom(rect.getBottom()));
+    };
+
+    /*
+     This lambda draws text labels and tick marks for each meter.  the label and tick mark are correctly positioned using a jmap trick that converts decibels to window positions.
+     */
+    auto drawTicks = [&](auto rect, auto leftMeterRightEdge, auto rightMeterLeftEdge)
+    {
+        for (int i = audioProcessor.MAX_DECIBELS; i >= audioProcessor.NEGATIVE_INFINITY; i -= 12)
+        {
+            auto y = juce::jmap<int>(i, audioProcessor.NEGATIVE_INFINITY, audioProcessor.MAX_DECIBELS, rect.getBottom(), rect.getY());
+            auto r = juce::Rectangle<int>(rect.getWidth(), audioProcessor.fontHeight);
+            r.setCentre(rect.getCentreX(), y);
+            g.setColour(i == 0 ? juce::Colours::white :
+                i > 0 ? juce::Colours::red :
+                juce::Colours::lightsteelblue);
+            g.drawFittedText(juce::String(i),
+                r,
+                juce::Justification::centred,
+                1);
+            //only draw ticks inside of the meter bounds, not at the top or bottom
+            if (i != audioProcessor.MAX_DECIBELS && i != audioProcessor.NEGATIVE_INFINITY)
+            {
+                g.drawLine(rect.getX() + audioProcessor.tickIndent, y, leftMeterRightEdge - audioProcessor.tickIndent, y);
+                g.drawLine(rightMeterLeftEdge + audioProcessor.tickIndent, y, rect.getRight() - audioProcessor.tickIndent, y);
+            }
+        }
+    };
+
+    /*
+     this lambda draws the label, then computes the rectangles that form each individual channel
+     then it draws the meters for each computed rectangle
+     then it draws the ticks.
+     */
+    auto drawMeter = [&fillMeter, &drawTicks](auto rect, auto& g, const auto& leftSource, const auto& rightSource, const auto& label)
+    {
+        g.setColour(juce::Colours::green);
+        g.drawRect(rect);
+        rect.reduce(2, 2);
+
+        g.setColour(juce::Colours::white);
+        g.drawText(label, rect.removeFromBottom(24), juce::Justification::centred);
+        rect.removeFromTop(24 / 2);
+        const auto meterArea = rect;
+        const auto leftChan = rect.removeFromLeft(24);
+        const auto rightChan = rect.removeFromRight(24);
+
+        fillMeter(leftChan, leftSource);
+        fillMeter(rightChan, rightSource);
+        drawTicks(meterArea, leftChan.getRight(), rightChan.getX());
+    };
+
+    /*
+     here is where we put it all together and draw the pre and post meters.
+     */
+    auto preMeterArea = bounds.removeFromLeft(meterWidth);
+    drawMeter(preMeterArea,
+        g,
+        audioProcessor.leftPreRMS,
+        audioProcessor.rightPreRMS,
+        "In");
+
+    auto postMeterArea = bounds.removeFromRight(meterWidth);
+    drawMeter(postMeterArea,
+        g,
+        audioProcessor.leftPostRMS,
+        audioProcessor.rightPostRMS,
+        "Out");
 }
 
 void Project13AudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
     bounds.removeFromTop(10);
+    auto leftmeterArea = bounds.removeFromLeft(meterWidth);
+    auto rightMeterArea = bounds.removeFromRight(meterWidth);
+    juce::ignoreUnused(leftmeterArea, rightMeterArea);
     tabbedComponent.setBounds(bounds.removeFromTop(30));
     dspGUI.setBounds(bounds);
 }
 
 void Project13AudioProcessorEditor::timerCallback()
 {
-
+    repaint();
     if (audioProcessor.restoreDspOrderFifo.getNumAvailableForReading() == 0)
         return;
 

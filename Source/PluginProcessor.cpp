@@ -798,8 +798,8 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     }
 
     const auto numSamples = buffer.getNumSamples();
-    auto samplesRemaining = buffer.getNumSamples(); // (1) 
-    auto maxSamplesToProcess = juce::jmin(samplesRemaining, 64); // (2)
+    auto samplesRemaining = numSamples;
+    auto maxSamplesToProcess = juce::jmin(numSamples, 64);
 
     leftPreRMS.set(buffer.getRMSLevel(0, 0, numSamples));
     rightPreRMS.set(buffer.getRMSLevel(1, 0, numSamples));
