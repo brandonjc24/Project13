@@ -78,6 +78,11 @@ public:
         END_OF_LIST
     };
 
+    //==============================================================================
+    static constexpr int NEGATIVE_INFINITY = -72;
+    static constexpr int MAX_DECIBELS = 12;
+    //==============================================================================
+
     using DSP_Order = std::array<DSP_Option, static_cast<size_t>(DSP_Option::END_OF_LIST)>;
     SimpleMBComp::Fifo<DSP_Order> dspOrderFifo, restoreDspOrderFifo;
 
@@ -135,6 +140,8 @@ public:
         generalFilterGainSmoother;
 
     juce::Atomic<bool> guiNeedsLatestDspOrder{ false };
+    juce::Atomic<float> leftPreRMS, rightPreRMS, leftPostRMS, rightPostRMS;
+
     std::vector<juce::SmoothedValue<float>*> getSmoothers();
     enum class SmootherUpdateMode
     {
