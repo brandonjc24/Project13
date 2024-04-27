@@ -205,6 +205,12 @@ void ExtendedTabbedButtonBar::mouseDown(const juce::MouseEvent& e)
     DBG("ExtendedTabbedButtonBar::mouseDown");
     if (auto tabBarBeingDragged = dynamic_cast<ExtendedTabBarButton*>(e.originalComponent))
     {
+        auto tabs = getTabs();
+        auto idx = tabs.indexOf(tabBarBeingDragged);
+        if (idx != -1) {
+            setCurrentTabIndex(idx);
+        }
+
         startDragging(tabBarBeingDragged->TabBarButton::getTitle(),
             tabBarBeingDragged,
             dragImage);
@@ -260,8 +266,8 @@ void Project13AudioProcessorEditor::selectedTabChanged(int newCurrentTabIndex)
      */
     if (selectedTabAttachment)
     {
-        selectedTabAttachment->setValueAsCompleteGesture(static_cast<float>(newCurrentTabIndex));
         rebuildInterface();
+        selectedTabAttachment->setValueAsCompleteGesture(static_cast<float>(newCurrentTabIndex));
     }
 }
 
@@ -285,6 +291,31 @@ int ExtendedTabbedButtonBar::findDraggedItemIndex(const SourceDetails& dragSourc
     return -1;
 }
 
+struct Comparator
+{
+    /*
+    This will use a comparator object to sort the elements into order. The object
+    passed must have a method of the form:
+    @code
+    int compareElements (ElementType first, ElementType second);
+    @endcode
+
+    ..and this method must return:
+      - a value of < 0 if the first comes before the second
+      - a value of 0 if the two objects are equivalent
+      - a value of > 0 if the second comes before the first
+     */
+    int compareElements(juce::TabBarButton* first, juce::TabBarButton* second)
+    {
+        if (first->getX() < second->getX())
+            return -1;
+        if (first->getX() == second->getX())
+            return 0;
+
+        return 1;
+    }
+};
+
 juce::Array<juce::TabBarButton*> ExtendedTabbedButtonBar::getTabs()
 {
     auto numTabs = getNumTabs();
@@ -294,6 +325,10 @@ juce::Array<juce::TabBarButton*> ExtendedTabbedButtonBar::getTabs()
     {
         tabs.getReference(i) = getTabButton(i);
     }
+
+    auto unsorted = tabs;
+    Comparator comparator;
+    tabs.sort(comparator);
 
     return tabs;
 }
@@ -570,6 +605,15 @@ void DSP_Gui::paint(juce::Graphics& g)
 
 void DSP_Gui::rebuildInterface(std::vector<juce::RangedAudioParameter*> params)
 {
+    if (params == currentParams)
+    {
+        DBG("interface didn't change");
+        return;
+    }
+
+    DBG("interface changed");
+    currentParams = params;
+
     //attachments must be cleared before components are cleared
     sliderAttachments.clear();
     comboBoxAttachments.clear();

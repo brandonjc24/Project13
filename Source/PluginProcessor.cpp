@@ -745,7 +745,7 @@ void Project13AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     //TODO: Filters are mono, not stereo
     //[DONE]: Drag-To-Reorder GUI
     //TODO: GUI design for each DSP instance?
-    //TODO: metering
+    //[DONE]: metering
     //TODO: restore tabs in GUI when loading settings
     //[DONE]: prepare all DSP
     //[DONE]: snap dropped tabs to correct position
