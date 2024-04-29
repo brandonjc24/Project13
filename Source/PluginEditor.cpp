@@ -10,6 +10,7 @@
 #include "PluginEditor.h"
 #include "../SimpleMultiBandComp/Source/GUI/RotarySliderWithLabels.h"
 #include "../SimpleMultiBandComp/Source/GUI/Utilities.h"
+#include "../SimpleMultiBandComp/Source/GUI/CustomButtons.h"
 
 static juce::String getNameFromDSPOption(Project13AudioProcessor::DSP_Option option)
 {
@@ -221,6 +222,31 @@ void Project13AudioProcessorEditor::tabOrderChanged(Project13AudioProcessor::DSP
 {
     rebuildInterface();
     audioProcessor.dspOrderFifo.push(newOrder);
+}
+
+struct PowerButtonWithParam : PowerButton
+{
+    PowerButtonWithParam(juce::RangedAudioParameter* p);
+    void changeAttachment(juce::RangedAudioParameter* p);
+private:
+    std::unique_ptr<juce::ButtonParameterAttachment> attachment;
+};
+
+void PowerButtonWithParam::changeAttachment(juce::RangedAudioParameter* rap)
+{
+    attachment.reset();
+
+    if (rap != nullptr)
+    {
+        attachment = std::make_unique<juce::ButtonParameterAttachment>(*rap, *this);
+        attachment->sendInitialUpdate();
+    }
+}
+
+PowerButtonWithParam::PowerButtonWithParam(juce::RangedAudioParameter* p)
+{
+    jassert(p != nullptr);
+    changeAttachment(p);
 }
 
 juce::TabBarButton* ExtendedTabbedButtonBar::createTabButton(const juce::String& tabName, int tabIndex)
@@ -581,6 +607,30 @@ void Project13AudioProcessorEditor::addTabsFromDSPOrder(Project13AudioProcessor:
         tabbedComponent.addTab(getNameFromDSPOption(v), juce::Colours::white, -1);
     }
 
+    auto numTabs = tabbedComponent.getNumTabs();
+    auto size = tabbedComponent.getHeight();
+
+    for (int i = 0; i < numTabs; ++i)
+    {
+        if (auto tab = tabbedComponent.getTabButton(i))
+        {
+            auto order = newOrder[i];
+            auto params = audioProcessor.getParamsForOptions(order);
+            for (auto p : params)
+            {
+                if (auto bypass = dynamic_cast<juce::AudioParameterBool*>(p))
+                {
+                    if (bypass->name.containsIgnoreCase("bypass"))
+                    {
+                        auto pbwp = std::make_unique<PowerButtonWithParam>(bypass);
+                        pbwp->setSize(size, size);
+                        tab->setExtraComponent(pbwp.release(), juce::TabBarButton::ExtraComponentPlacement::beforeText);
+                    }
+                }
+            }
+        }
+    }
+
     rebuildInterface();  
     audioProcessor.dspOrderFifo.push(newOrder);
 }
@@ -635,9 +685,10 @@ void DSP_Gui::rebuildInterface(std::vector<juce::RangedAudioParameter*> params)
         }
         else if (auto* toggle = dynamic_cast<juce::AudioParameterBool*>(p))
         {
-            buttons.push_back(std::make_unique<juce::ToggleButton>("Bypass"));
-            auto& btn = *buttons.back();
-            buttonAttachments.push_back(std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(processor.apvts, p->getName(100), btn));
+           // buttons.push_back(std::make_unique<juce::ToggleButton>("Bypass"));
+           // auto& btn = *buttons.back();
+           // buttonAttachments.push_back(std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(processor.apvts, p->getName(100), btn));
+            DBG("DSP_Gui::rebuildInterface() skipping APVTS::ButtonAttachment for AudioParameterBool: " << p->getName(100));
         }
         else
         {
